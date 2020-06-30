@@ -7,13 +7,13 @@
 
 #include "shader.hpp"
 
-#define SQUARE_SIDE 18
-#define SQUARE_GUTTER 2
+#define SQUARE_SIDE 10
+#define SQUARE_GUTTER 1
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
 
-const int window_width = 800;
-const int window_height = 600;
+const int window_width = 1602;
+const int window_height = 902;
 
 int main() {
   glfwInit();
@@ -39,48 +39,25 @@ int main() {
 
   glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-  const int squares_per_line = window_width / (SQUARE_SIDE + SQUARE_GUTTER);
-  const int squares_per_column = window_height / (SQUARE_SIDE + SQUARE_GUTTER);
+  const int squares_per_line = (window_width - SQUARE_GUTTER) / (SQUARE_SIDE + SQUARE_GUTTER);
+  const int squares_per_column = (window_height - SQUARE_GUTTER) / (SQUARE_SIDE + SQUARE_GUTTER);
 
-  float vertices[squares_per_line * squares_per_column * 3 * 4];
-  unsigned int indices[squares_per_line * squares_per_column * 6];
+  const float semi_width = SQUARE_SIDE / 2;
+  const float semi_height = SQUARE_SIDE / 2;
 
-  int last_vertices_idx = 0;
-  int last_indices_idx = 0;
-  int registered_vertices = 0;
+  float vertices[] = {
+      -semi_width / (window_width / 2), semi_height / (window_height / 2),  0.0f,  // top left
+      semi_width / (window_width / 2),  semi_height / (window_height / 2),  0.0f,  // top right
+      -semi_width / (window_width / 2), -semi_height / (window_height / 2), 0.0f,  // bottom left
+      semi_width / (window_width / 2),  -semi_height / (window_height / 2), 0.0f,  // bottom right
+  };
 
-  for (int row = -squares_per_line / 2; row < squares_per_line / 2; row++) {
-    for (int col = squares_per_column / 2; col > -squares_per_column / 2; col--) {
-      const float x = row * (SQUARE_SIDE + SQUARE_GUTTER);
-      const float y = col * (SQUARE_SIDE + SQUARE_GUTTER);
+  unsigned int indices[] = {0, 1, 2, 1, 2, 3};
 
-      const float x_left = x / (window_width / 2);
-      const float x_right = (x + SQUARE_SIDE) / (window_width / 2);
-      const float y_top = y / (window_height / 2);
-      const float y_bottom = (y - SQUARE_SIDE) / (window_height / 2);
-
-      float top_left[3] = {x_left, y_top, 0.0};
-      float top_right[3] = {x_right, y_top, 0.0};
-      float bottom_left[3] = {x_left, y_bottom, 0.0};
-      float bottom_right[3] = {x_right, y_bottom, 0.0};
-
-      for (int i = 0; i < 3; i++) {
-        vertices[last_vertices_idx + i] = top_left[i];
-        vertices[last_vertices_idx + i + 3] = top_right[i];
-        vertices[last_vertices_idx + i + 6] = bottom_left[i];
-        vertices[last_vertices_idx + i + 9] = bottom_right[i];
-      }
-
-      indices[last_indices_idx] = registered_vertices;
-      indices[last_indices_idx + 1] = registered_vertices + 1;
-      indices[last_indices_idx + 2] = registered_vertices + 2;
-      indices[last_indices_idx + 3] = registered_vertices + 1;
-      indices[last_indices_idx + 4] = registered_vertices + 2;
-      indices[last_indices_idx + 5] = registered_vertices + 3;
-
-      registered_vertices += 4;
-      last_indices_idx += 6;
-      last_vertices_idx += 12;
+  bool cells[squares_per_line][squares_per_column];
+  for (int row = 0; row < squares_per_line; row++) {
+    for (int col = 0; col < squares_per_column; col++) {
+      cells[row][col] = (row + col) % 2;
     }
   }
 
@@ -110,7 +87,19 @@ int main() {
 
     glUseProgram(shader_id);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+
+    int is_alive_loc = glGetUniformLocation(shader_id, "is_alive");
+    int offset_loc = glGetUniformLocation(shader_id, "offset");
+
+    for (int row = -squares_per_line / 2; row < squares_per_line / 2; row++) {
+      for (int col = -squares_per_column / 2; col < squares_per_column / 2; col++) {
+        glUniform1i(is_alive_loc, cells[row + squares_per_line / 2][col + squares_per_column / 2]);
+        const float offset_x = (SQUARE_SIDE + SQUARE_GUTTER) * row + (SQUARE_SIDE / 2);
+        const float offset_y = (SQUARE_SIDE + SQUARE_GUTTER) * col + (SQUARE_SIDE / 2);
+        glUniform2f(offset_loc, offset_x / (window_width / 2), offset_y / (window_height / 2));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+      }
+    }
     glBindVertexArray(0);
   }
 }

@@ -1,5 +1,13 @@
 #version 330 core
 
-out vec4 FragColor;
+in vec3 col;
+uniform int is_alive;
+out vec4 out_color;
 
-void main() { FragColor = vec4(1.0, 1.0, 1.0, 1.0); }
+void main() {
+  if (is_alive == 1) {
+    out_color = vec4(0, 0, 0, 0);
+  } else {
+    out_color = vec4(1.0, 1.0, 1.0, 1.0);
+  }
+}
