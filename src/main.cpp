@@ -78,9 +78,15 @@ void update_cells(int cells[squares_per_line][squares_per_column]) {
         if (row < squares_per_line - 1 && col < squares_per_column - 1) {
           neighbors += cells[row + 1][col + 1];
           neighbors += cells[row + 1][col];
-          neighbors += cells[row][col + 1];
           neighbors += cells[row + 1][col - 1];
+          neighbors += cells[row][col + 1];
           neighbors += cells[row - 1][col + 1];
+        } else if (col == squares_per_column - 1) {
+          neighbors += cells[row + 1][col - 1];
+          neighbors += cells[row + 1][col];
+        } else if (row == squares_per_line - 1) {
+          neighbors += cells[row - 1][col + 1];
+          neighbors += cells[row][col + 1];
         }
       } else if (row > 0) {  // col = 0
         neighbors += cells[row - 1][col + 1];
@@ -104,11 +110,10 @@ void update_cells(int cells[squares_per_line][squares_per_column]) {
         neighbors += cells[row + 1][col + 1];
       }
 
-      if (neighbors == 3) {
+      if (neighbors == 3)
         new_cells[row][col] = 1;
-      } else if (neighbors != 2) {
+      else if (neighbors != 2)
         new_cells[row][col] = 0;
-      }
     }
   }
   std::copy(&new_cells[0][0], &new_cells[0][0] + squares_per_line * squares_per_column, &cells[0][0]);
