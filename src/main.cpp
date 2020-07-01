@@ -98,7 +98,7 @@ void update_cells(int cells[squares_per_line][squares_per_column]) {
           neighbors += cells[row][col + 1];
           neighbors += cells[row + 1][col + 1];
         }
-      } else {  // row = 0 && row = 0
+      } else {  // row = 0 && col = 0
         neighbors += cells[row + 1][col];
         neighbors += cells[row][col + 1];
         neighbors += cells[row + 1][col + 1];

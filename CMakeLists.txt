@@ -47,3 +47,17 @@ include_directories(
 
 # Define the link libraries
 target_link_libraries(${PROJECT_NAME} ${LIBS})
+
+#--------------------------------------------------------------------
+# Hide the console window in visual studio projects
+#--------------------------------------------------------------------
+if(MSVC)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+endif()
+
+#--------------------------------------------------------------------
+# Hide the console window in visual studio projects - Release
+#--------------------------------------------------------------------
+if(MSVC)
+	set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+endif()
