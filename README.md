@@ -1,18 +1,19 @@
 # Conway's game of life
 conway's game of life to learn opengl
 
-dirty version. I'll clean this up later or not ... ¯\\_(ツ)_/¯
+this is my first c++ project so it's dirty.  
+I'll probably clean this up later ... or not ¯\\_(ツ)_/¯
 
-CONTROLS
-* left click to kill/put life into cells
-* space to start/pause 
+### Controls
+* Left click to kill/put life into cells
+* Space to start/pause 
 
-TODO
-* separate game state and rendering? from main.cpp 
-* support window resize
-* indicates when game is paused/running
- * refactor neighbors counting
-* support for holding left mouse button
-* randomly generated life (mathusalem)
-* add test
+### Todo
+* Separate game state and rendering? from main.cpp 
+* Support window resize
+* Indicates when game is paused/running
+ * Refactor neighbors counting
+* Support for holding left mouse button
+* Randomly generated life (mathusalem, ...)
+* Add test
 
