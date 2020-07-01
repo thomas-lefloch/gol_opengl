@@ -11,6 +11,9 @@
 double cursor_x = 0;
 double cursor_y = 0;
 
+// double to avoid type casting on division
+constexpr double update_fps = 9;
+
 constexpr int square_side = 10;
 constexpr int square_gutter = 1;
 
@@ -160,21 +163,24 @@ int main() {
   glGenBuffers(1, &EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-  // vertices location
+
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
   int shader_id = create_shader_program(ROOT_DIR "shaders/vertex.vs", ROOT_DIR "shaders/fragment.fs");
   if (shader_id == -1) std::cout << "Error while parsing/compiling shaders" << std::endl;
 
-  // TODO limit fps
+  double total_time = 0;
   while (!glfwWindowShouldClose(window)) {
-    int grid[squares_per_line][squares_per_column];
+    double start_time = glfwGetTime();
     glfwSwapBuffers(window);
     glfwPollEvents();
 
     // TODO: should display indication that game is stopped
-    if (should_update) update_cells(cells);
+    if ((1 / update_fps) - total_time < 0.001 && should_update) {
+      update_cells(cells);
+      total_time = 0;
+    }
 
     // render
     glUseProgram(shader_id);
@@ -203,5 +209,7 @@ int main() {
       }
     }
     glBindVertexArray(0);
+
+    total_time += glfwGetTime() - start_time;
   }
 }
