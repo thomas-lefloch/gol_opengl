@@ -2,18 +2,55 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <math.h>
 
 #include <helpers/RootDir.h>
 
 #include "shader.hpp"
 
-#define SQUARE_SIDE 10
-#define SQUARE_GUTTER 1
+double cursor_x = 0;
+double cursor_y = 0;
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+constexpr int square_side = 10;
+constexpr int square_gutter = 1;
 
-const int window_width = 1602;
-const int window_height = 902;
+constexpr int window_width = 1610;
+constexpr int window_height = 910;
+
+constexpr int squares_per_line = (window_width - square_gutter) / (square_side + square_gutter);
+constexpr int squares_per_column = (window_height - square_gutter) / (square_side + square_gutter);
+
+constexpr int grid_offset_x = window_width - squares_per_line * (square_side + square_gutter);
+constexpr int grid_offset_y = window_height - squares_per_column * (square_side + square_gutter);
+
+bool cells[squares_per_line][squares_per_column];
+
+constexpr GLfloat white[] = {1, 1, 1, 1};
+constexpr GLfloat black[] = {0, 0, 0, 0};
+constexpr GLfloat grey[] = {.5, .5, .5, .5};
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+  cursor_x = xpos;
+  cursor_y = ypos;
+}
+
+void find_corresponding_cell(double x, double y, int* cell_row, int* cell_col) {
+  // cells can be offset by one pixel due to grid_offset * .5 rounding
+  *cell_row = floor((x - grid_offset_x * .5) / (double)(square_side + square_gutter));
+  *cell_col = floor((y - grid_offset_y * .5) / (double)(square_side + square_gutter));
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    int hovered_row, hovered_col;
+    find_corresponding_cell(cursor_x, cursor_y, &hovered_row, &hovered_col);
+    if (cells[hovered_row][hovered_col] == 1)
+      cells[hovered_row][hovered_col] = 0;
+    else
+      cells[hovered_row][hovered_col] = 1;
+  }
+}
 
 int main() {
   glfwInit();
@@ -37,27 +74,22 @@ int main() {
 
   glViewport(0, 0, window_width, window_height);
 
-  glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-
-  const int squares_per_line = (window_width - SQUARE_GUTTER) / (SQUARE_SIDE + SQUARE_GUTTER);
-  const int squares_per_column = (window_height - SQUARE_GUTTER) / (SQUARE_SIDE + SQUARE_GUTTER);
-
-  const float semi_width = SQUARE_SIDE / 2;
-  const float semi_height = SQUARE_SIDE / 2;
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetCursorPosCallback(window, cursor_position_callback);
+  glfwSetMouseButtonCallback(window, mouse_button_callback);
 
   float vertices[] = {
-      -semi_width / (window_width / 2), semi_height / (window_height / 2),  0.0f,  // top left
-      semi_width / (window_width / 2),  semi_height / (window_height / 2),  0.0f,  // top right
-      -semi_width / (window_width / 2), -semi_height / (window_height / 2), 0.0f,  // bottom left
-      semi_width / (window_width / 2),  -semi_height / (window_height / 2), 0.0f,  // bottom right
+      -(square_side * .5) / (window_width * .5), (square_side * .5) / (window_height * .5),  .0,  // top left
+      (square_side * .5) / (window_width * .5),  (square_side * .5) / (window_height * .5),  .0,  // top right
+      -(square_side * .5) / (window_width * .5), -(square_side * .5) / (window_height * .5), .0,  // bottom left
+      (square_side * .5) / (window_width * .5),  -(square_side * .5) / (window_height * .5), .0,  // bottom right
   };
 
   unsigned int indices[] = {0, 1, 2, 1, 2, 3};
 
-  bool cells[squares_per_line][squares_per_column];
   for (int row = 0; row < squares_per_line; row++) {
     for (int col = 0; col < squares_per_column; col++) {
-      cells[row][col] = (row + col) % 2;
+      cells[row][col] = 0;
     }
   }
 
@@ -93,10 +125,20 @@ int main() {
 
     for (int row = -squares_per_line / 2; row < squares_per_line / 2; row++) {
       for (int col = -squares_per_column / 2; col < squares_per_column / 2; col++) {
-        glUniform1i(is_alive_loc, cells[row + squares_per_line / 2][col + squares_per_column / 2]);
-        const float offset_x = (SQUARE_SIDE + SQUARE_GUTTER) * row + (SQUARE_SIDE / 2);
-        const float offset_y = (SQUARE_SIDE + SQUARE_GUTTER) * col + (SQUARE_SIDE / 2);
-        glUniform2f(offset_loc, offset_x / (window_width / 2), offset_y / (window_height / 2));
+        // coloring
+        int hovered_row, hovered_col;
+        find_corresponding_cell(cursor_x, cursor_y, &hovered_row, &hovered_col);
+        if ((row + squares_per_line / 2) == hovered_row && (col + (squares_per_column / 2)) == hovered_col)
+          glUniform4fv(is_alive_loc, 1, grey);
+        else if (cells[row + squares_per_line / 2][col + (squares_per_column / 2)] == 1)
+          glUniform4fv(is_alive_loc, 1, black);
+        else
+          glUniform4fv(is_alive_loc, 1, white);
+
+        // placing
+        const float offset_x = (square_side + square_gutter) * row + (square_side * .5);
+        const float offset_y = -(square_side + square_gutter) * col - (square_side * .5);
+        glUniform2f(offset_loc, offset_x / (window_width * .5), offset_y / (window_height * .5));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
       }
     }
