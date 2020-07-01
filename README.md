@@ -11,9 +11,9 @@ I'll probably clean this up later ... or not ¯\\_(ツ)_/¯
 ### Todo
 * Separate game state and rendering? from main.cpp 
 * Support window resize
-* Indicates when game is paused/running
+* Indicate when game is paused/running
  * Refactor neighbors counting
 * Support for holding left mouse button
 * Randomly generated life (mathusalem, ...)
-* Add test
+* Test
 
