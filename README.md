@@ -16,4 +16,5 @@ I'll probably clean this up later ... or not ¯\\_(ツ)_/¯
 * Support for holding left mouse button
 * Randomly generated life (mathusalem, ...)
 * Test
+* Reset button
 
